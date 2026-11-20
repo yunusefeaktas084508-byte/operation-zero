@@ -14,15 +14,15 @@ window.OZ_WEAPONS = (function () {
   };
 
   const WEAPONS = {
-    vandal_x: { id: 'vandal_x', name: 'VANDAL-X', category: 'Assault Rifles', slot: 1, price: 2900, damage: 40, headMult: 3.5, fireRate: 105, reloadTime: 2100, magSize: 25, reserveAmmo: 75, auto: true, recoilY: 0.034, recoilX: 0.016, spread: 0.008, adsFov: 52, range: 160, modelType: 'rifle_heavy', soundProfile: 'rifle_loud' },
-    phantom_z: { id: 'phantom_z', name: 'PHANTOM-Z', category: 'Assault Rifles', slot: 1, price: 2900, damage: 35, headMult: 3.2, fireRate: 90, reloadTime: 1950, magSize: 30, reserveAmmo: 90, auto: true, recoilY: 0.025, recoilX: 0.012, spread: 0.006, adsFov: 55, range: 150, modelType: 'rifle_silenced', soundProfile: 'rifle_suppressed' },
-    operator_9: { id: 'operator_9', name: 'OPERATOR-9', category: 'Sniper Rifles', slot: 1, price: 4700, damage: 150, headMult: 2.5, fireRate: 1300, reloadTime: 2900, magSize: 5, reserveAmmo: 15, auto: false, recoilY: 0.095, recoilX: 0.025, spread: 0.001, adsFov: 24, isSniper: true, range: 300, modelType: 'sniper', soundProfile: 'sniper_boom' },
-    spectre_v: { id: 'spectre_v', name: 'SPECTRE-V', category: 'SMG', slot: 1, price: 1600, damage: 26, headMult: 2.5, fireRate: 72, reloadTime: 1650, magSize: 30, reserveAmmo: 90, auto: true, recoilY: 0.018, recoilX: 0.014, spread: 0.014, adsFov: 60, range: 95, modelType: 'smg', soundProfile: 'smg_rapid' },
-    breacher_12: { id: 'breacher_12', name: 'BREACHER-12', category: 'Shotguns', slot: 1, price: 1850, damage: 22, headMult: 2.0, fireRate: 750, reloadTime: 2400, magSize: 8, reserveAmmo: 32, auto: false, pellets: 7, recoilY: 0.075, recoilX: 0.03, spread: 0.055, adsFov: 62, range: 38, modelType: 'shotgun', soundProfile: 'shotgun_blast' },
-    odin_hmg: { id: 'odin_hmg', name: 'ODIN-HMG', category: 'Heavy Weapons', slot: 1, price: 3200, damage: 32, headMult: 2.4, fireRate: 80, reloadTime: 3200, magSize: 100, reserveAmmo: 200, auto: true, recoilY: 0.028, recoilX: 0.022, spread: 0.015, adsFov: 56, range: 130, modelType: 'heavy', soundProfile: 'heavy_thump' },
-    sheriff_50: { id: 'sheriff_50', name: 'SHERIFF .50', category: 'Pistols', slot: 2, price: 800, damage: 55, headMult: 2.8, fireRate: 380, reloadTime: 1700, magSize: 6, reserveAmmo: 24, auto: false, recoilY: 0.055, recoilX: 0.015, spread: 0.005, adsFov: 62, range: 120, modelType: 'revolver', soundProfile: 'pistol_heavy' },
-    glock_18: { id: 'glock_18', name: 'VIPER-18', category: 'Pistols', slot: 2, price: 400, damage: 24, headMult: 2.5, fireRate: 160, reloadTime: 1400, magSize: 18, reserveAmmo: 54, auto: false, recoilY: 0.022, recoilX: 0.01, spread: 0.01, adsFov: 64, range: 90, modelType: 'pistol', soundProfile: 'pistol_light' },
-    karambit_0: { id: 'karambit_0', name: 'ZERO KARAMBIT', category: 'Melee Weapons', slot: 3, price: 0, damage: 75, headMult: 2.0, fireRate: 450, reloadTime: 0, magSize: 1, reserveAmmo: 1, auto: false, isMelee: true, recoilY: 0.01, recoilX: 0.01, spread: 0, adsFov: 75, range: 4.5, modelType: 'knife', soundProfile: 'knife_slash' }
+    vandal_x: { id: 'vandal_x', name: 'VANDAL-X', category: 'Assault Rifles', slot: 1, price: 2900, damage: 40, headMult: 3.5, fireRate: 105, reloadTime: 2100, magSize: 25, reserveAmmo: 75, auto: true, recoilY: 0.034, recoilX: 0.016, spread: 0.008, adsFov: 52, range: 160, modelType: 'rifle_heavy', soundProfile: 'rifle_loud', modelUrl: 'models/vandal_x.glb', modelScale: 0.35 },
+    phantom_z: { id: 'phantom_z', name: 'PHANTOM-Z', category: 'Assault Rifles', slot: 1, price: 2900, damage: 35, headMult: 3.2, fireRate: 90, reloadTime: 1950, magSize: 30, reserveAmmo: 90, auto: true, recoilY: 0.025, recoilX: 0.012, spread: 0.006, adsFov: 55, range: 150, modelType: 'rifle_silenced', soundProfile: 'rifle_suppressed', modelUrl: 'models/phantom_z.glb', modelScale: 0.35 },
+    operator_9: { id: 'operator_9', name: 'OPERATOR-9', category: 'Sniper Rifles', slot: 1, price: 4700, damage: 150, headMult: 2.5, fireRate: 1300, reloadTime: 2900, magSize: 5, reserveAmmo: 15, auto: false, recoilY: 0.095, recoilX: 0.025, spread: 0.001, adsFov: 24, isSniper: true, range: 300, modelType: 'sniper', soundProfile: 'sniper_boom', modelUrl: 'models/operator_9.glb', modelScale: 0.42 },
+    spectre_v: { id: 'spectre_v', name: 'SPECTRE-V', category: 'SMG', slot: 1, price: 1600, damage: 26, headMult: 2.5, fireRate: 72, reloadTime: 1650, magSize: 30, reserveAmmo: 90, auto: true, recoilY: 0.018, recoilX: 0.014, spread: 0.014, adsFov: 60, range: 95, modelType: 'smg', soundProfile: 'smg_rapid', modelUrl: 'models/spectre_v.glb', modelScale: 0.32 },
+    breacher_12: { id: 'breacher_12', name: 'BREACHER-12', category: 'Shotguns', slot: 1, price: 1850, damage: 22, headMult: 2.0, fireRate: 750, reloadTime: 2400, magSize: 8, reserveAmmo: 32, auto: false, pellets: 7, recoilY: 0.075, recoilX: 0.03, spread: 0.055, adsFov: 62, range: 38, modelType: 'shotgun', soundProfile: 'shotgun_blast', modelUrl: 'models/breacher_12.glb', modelScale: 0.35 },
+    odin_hmg: { id: 'odin_hmg', name: 'ODIN-HMG', category: 'Heavy Weapons', slot: 1, price: 3200, damage: 32, headMult: 2.4, fireRate: 80, reloadTime: 3200, magSize: 100, reserveAmmo: 200, auto: true, recoilY: 0.028, recoilX: 0.022, spread: 0.015, adsFov: 56, range: 130, modelType: 'heavy', soundProfile: 'heavy_thump', modelUrl: 'models/odin_hmg.glb', modelScale: 0.4 },
+    sheriff_50: { id: 'sheriff_50', name: 'SHERIFF .50', category: 'Pistols', slot: 2, price: 800, damage: 55, headMult: 2.8, fireRate: 380, reloadTime: 1700, magSize: 6, reserveAmmo: 24, auto: false, recoilY: 0.055, recoilX: 0.015, spread: 0.005, adsFov: 62, range: 120, modelType: 'revolver', soundProfile: 'pistol_heavy', modelUrl: 'models/sheriff_50.glb', modelScale: 0.25 },
+    glock_18: { id: 'glock_18', name: 'VIPER-18', category: 'Pistols', slot: 2, price: 400, damage: 24, headMult: 2.5, fireRate: 160, reloadTime: 1400, magSize: 18, reserveAmmo: 54, auto: false, recoilY: 0.022, recoilX: 0.01, spread: 0.01, adsFov: 64, range: 90, modelType: 'pistol', soundProfile: 'pistol_light', modelUrl: 'models/glock_18.glb', modelScale: 0.24 },
+    karambit_0: { id: 'karambit_0', name: 'ZERO KARAMBIT', category: 'Melee Weapons', slot: 3, price: 0, damage: 75, headMult: 2.0, fireRate: 450, reloadTime: 0, magSize: 1, reserveAmmo: 1, auto: false, isMelee: true, recoilY: 0.01, recoilX: 0.01, spread: 0, adsFov: 75, range: 4.5, modelType: 'knife', soundProfile: 'knife_slash', modelUrl: 'models/karambit_0.glb', modelScale: 0.28 }
   };
 
   const textureCache = {};
@@ -48,10 +48,36 @@ window.OZ_WEAPONS = (function () {
     return tex;
   }
 
-  function buildWeaponMesh(weaponId, skinId) {
-    const w = WEAPONS[weaponId] || WEAPONS.vandal_x;
-    const skin = SKINS[skinId] || SKINS.default;
-    const tex = createSkinTexture(skin.id);
+  let gltfLoader = null;
+  const gltfCache = {};
+
+  function getGLTFLoader() {
+    if (gltfLoader) return gltfLoader;
+    if (typeof THREE !== 'undefined' && typeof THREE.GLTFLoader === 'function') {
+      gltfLoader = new THREE.GLTFLoader();
+    }
+    return gltfLoader;
+  }
+
+  function applySkinToGltf(object, skin, tex) {
+    const skinMat = new THREE.MeshStandardMaterial({
+      map: tex,
+      color: 0xffffff,
+      metalness: skin.metalness,
+      roughness: skin.roughness,
+      emissive: new THREE.Color(skin.emissive),
+      emissiveIntensity: skin.emissiveIntensity
+    });
+    object.traverse((child) => {
+      if (child.isMesh && child.name !== 'muzzleFlash') {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.material = skinMat;
+      }
+    });
+  }
+
+  function buildProceduralWeaponMesh(w, skin, tex) {
     const group = new THREE.Group();
 
     const primaryMat = new THREE.MeshStandardMaterial({
@@ -96,6 +122,63 @@ window.OZ_WEAPONS = (function () {
     group.add(muzzleFlash);
 
     return group;
+  }
+
+  function buildWeaponMesh(weaponId, skinId) {
+    const w = WEAPONS[weaponId] || WEAPONS.vandal_x;
+    const skin = SKINS[skinId] || SKINS.default;
+    const tex = createSkinTexture(skin.id);
+    const wrapper = new THREE.Group();
+
+    const fallback = buildProceduralWeaponMesh(w, skin, tex);
+    fallback.name = 'proceduralFallback';
+    wrapper.add(fallback);
+
+    const loader = getGLTFLoader();
+    if (!loader || !w.modelUrl) return wrapper;
+
+    const attachGltf = (sceneTemplate) => {
+      const prev = wrapper.getObjectByName('proceduralFallback');
+      if (prev) wrapper.remove(prev);
+
+      const model = sceneTemplate.clone(true);
+      const s = w.modelScale || 0.35;
+      model.scale.set(s, s, s);
+      model.rotation.y = Math.PI;
+      applySkinToGltf(model, skin, tex);
+
+      const muzzleFlash = new THREE.Mesh(
+        new THREE.ConeGeometry(0.06, 0.22, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffdd55, transparent: true, opacity: 0.0 })
+      );
+      muzzleFlash.rotation.x = -Math.PI / 2;
+      muzzleFlash.position.set(0, 0.02, -0.45);
+      muzzleFlash.name = 'muzzleFlash';
+      model.add(muzzleFlash);
+
+      wrapper.add(model);
+    };
+
+    if (gltfCache[w.modelUrl]) {
+      attachGltf(gltfCache[w.modelUrl]);
+      return wrapper;
+    }
+
+    loader.load(
+      w.modelUrl,
+      (gltf) => {
+        if (gltf && gltf.scene) {
+          gltfCache[w.modelUrl] = gltf.scene;
+          attachGltf(gltf.scene);
+        }
+      },
+      undefined,
+      () => {
+        // .glb dosyası henüz yoksa mevcut silah modeli sorunsuz kalır
+      }
+    );
+
+    return wrapper;
   }
 
   let audioCtx = null;
