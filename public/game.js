@@ -122,9 +122,13 @@
     }
     const rp = state.remotePlayers[p.id];
     rp.data = { ...rp.data, ...p };
-    rp.mesh.visible = p.alive !== false;
-    rp.mesh.position.set(p.x, (p.y || 2) - 2, p.z);
-    rp.mesh.rotation.y = p.rotY || 0;
+    const isAlive = p.alive !== false;
+    rp.mesh.visible = isAlive;
+    rp.mesh.children.forEach(c => { c.userData.playerId = p.id; });
+    const baseY = (Number.isFinite(Number(p.y)) ? Number(p.y) : 2) - 2;
+    rp.mesh.position.set(Number(p.x) || 0, Math.max(0, baseY), Number(p.z) || 0);
+    rp.mesh.rotation.y = Number(p.rotY) || 0;
+    rp.mesh.scale.y = p.crouching ? 0.65 : 1.0;
   }
 
   function equipSlot(slot) {
@@ -167,10 +171,24 @@
     const wallMeshes = state.colliders.map(c => c.mesh);
     const targetMeshes = [];
     Object.values(state.remotePlayers).forEach(rp => {
-      if (rp.data.alive !== false) rp.mesh.children.forEach(c => { c.userData.playerId = rp.data.id; targetMeshes.push(c); });
+      if (rp.data.alive !== false) {
+        rp.mesh.traverse(c => {
+          if (c.isMesh) {
+            c.userData.playerId = rp.data.id;
+            targetMeshes.push(c);
+          }
+        });
+      }
     });
     state.bots.forEach(b => {
-      if (b.alive) b.mesh.children.forEach(c => { c.userData.botId = b.id; targetMeshes.push(c); });
+      if (b.alive) {
+        b.mesh.traverse(c => {
+          if (c.isMesh) {
+            c.userData.botId = b.id;
+            targetMeshes.push(c);
+          }
+        });
+      }
     });
 
     const hits = raycaster.intersectObjects([...wallMeshes, ...targetMeshes], false);
@@ -257,7 +275,12 @@
   }
 
   function updatePlayerPhysics(dt) {
-    if (!state.inGame || !state.alive) return;
+    if (!state.inGame) return;
+    if (!state.alive) {
+      camera.position.copy(state.pos);
+      camera.quaternion.setFromEuler(new THREE.Euler(state.pitch, state.yaw, 0, 'YXZ'));
+      return;
+    }
     const forward = new THREE.Vector3(-Math.sin(state.yaw), 0, -Math.cos(state.yaw));
     const right = new THREE.Vector3(Math.cos(state.yaw), 0, -Math.sin(state.yaw));
     const moveDir = new THREE.Vector3();
@@ -401,7 +424,61 @@
   window.OZ_NET.on('player_joined', p => addOrUpdateRemotePlayer(p));
   window.OZ_NET.on('player_moved', p => addOrUpdateRemotePlayer(p));
   window.OZ_NET.on('player_left', id => { if (state.remotePlayers[id]) { scene.remove(state.remotePlayers[id].mesh); delete state.remotePlayers[id]; } });
-  window.OZ_NET.on('player_killed', d => { addKillFeed(d.killerName, d.victimName, d.weapon.toUpperCase(), d.headshot); document.getElementById('hud-score-atk').textContent = d.scores.attackers; document.getElementById('hud-score-def').textContent = d.scores.defenders; });
+  window.OZ_NET.on('player_damaged', d => {
+    const myId = window.OZ_NET.getPlayerId();
+    if (d.targetId === myId) {
+      state.hp = d.hp;
+      state.armor = d.armor;
+      updateHUD();
+    }
+  });
+  window.OZ_NET.on('player_killed', d => {
+    addKillFeed(d.killerName, d.victimName, d.weapon.toUpperCase(), d.headshot);
+    document.getElementById('hud-score-atk').textContent = d.scores.attackers;
+    document.getElementById('hud-score-def').textContent = d.scores.defenders;
+    const myId = window.OZ_NET.getPlayerId();
+    if (d.killerId === myId) state.matchKills++;
+    if (d.victimId === myId) {
+      state.alive = false;
+      state.hp = 0;
+      state.matchDeaths++;
+      updateHUD();
+    }
+    if (state.remotePlayers[d.victimId]) {
+      state.remotePlayers[d.victimId].data.alive = false;
+      state.remotePlayers[d.victimId].mesh.visible = false;
+    }
+  });
+  window.OZ_NET.on('player_respawned', d => {
+    const myId = window.OZ_NET.getPlayerId();
+    if (d.id === myId) {
+      state.alive = true;
+      state.hp = d.hp;
+      state.armor = d.armor;
+      state.vel.set(0, 0, 0);
+      state.pos.set(d.x, Math.max(2, d.y), d.z);
+      updateHUD();
+    } else if (state.remotePlayers[d.id]) {
+      const rp = state.remotePlayers[d.id];
+      rp.data.alive = true;
+      rp.mesh.visible = true;
+      rp.mesh.position.set(d.x, Math.max(0, (d.y || 2) - 2), d.z);
+    }
+  });
+  window.OZ_NET.on('round_start', p => {
+    state.alive = true;
+    state.hp = 100;
+    state.armor = 50;
+    state.vel.set(0, 0, 0);
+    const myId = window.OZ_NET.getPlayerId();
+    if (p.players && p.players[myId]) {
+      state.pos.set(p.players[myId].x, Math.max(2, p.players[myId].y), p.players[myId].z);
+    }
+    Object.values(p.players || {}).forEach(pl => {
+      if (pl.id !== myId) addOrUpdateRemotePlayer(pl);
+    });
+    updateHUD();
+  });
 
   function renderUI() {
     const inv = window.OZ_INVENTORY.getState();
