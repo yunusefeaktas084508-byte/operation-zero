@@ -16,19 +16,47 @@
   weaponScene.add(wLight);
 
   let state = {
-    inGame: false, isOfflineBots: false, selectedMode: 'competitive', selectedWeaponForSkin: 'vandal_x',
-    mapData: null, colliders: [], remotePlayers: {}, bots: [], tracers: [],
-    pos: new THREE.Vector3(0, 2, 0), vel: new THREE.Vector3(0, 0, 0), yaw: 0, pitch: 0,
-    hp: 100, armor: 50, alive: true, team: 'attackers', grounded: false, crouching: false, sprinting: false, ads: false,
-    currentSlot: 1, weaponsState: {}, reloading: false, lastShotTime: 0,
-    weaponMesh: null, lobbyShowcaseMesh: null, keys: {}, mouseDown: false,
-    matchKills: 0, matchDeaths: 0, spikePlanted: false, lastNetSync: 0
+    inGame: false,
+    isOfflineBots: false,
+    selectedMode: 'competitive',
+    selectedWeaponForSkin: 'vandal_x',
+    mapData: null,
+    colliders: [],
+    remotePlayers: {},
+    bots: [],
+    tracers: [],
+    pos: new THREE.Vector3(0, 2, 0),
+    vel: new THREE.Vector3(0, 0, 0),
+    yaw: 0,
+    pitch: 0,
+    hp: 100,
+    armor: 50,
+    alive: true,
+    team: 'attackers',
+    grounded: false,
+    crouching: false,
+    sprinting: false,
+    ads: false,
+    currentSlot: 1,
+    weaponsState: {},
+    reloading: false,
+    lastShotTime: 0,
+    weaponMesh: null,
+    lobbyShowcaseMesh: null,
+    keys: {},
+    mouseDown: false,
+    matchKills: 0,
+    matchDeaths: 0,
+    spikePlanted: false,
+    lastNetSync: 0
   };
 
   function clearScene() {
     while (scene.children.length > 0) scene.remove(scene.children[0]);
     while (weaponScene.children.length > 2) weaponScene.remove(weaponScene.children[2]);
-    state.remotePlayers = {}; state.bots = []; state.tracers = [];
+    state.remotePlayers = {};
+    state.bots = [];
+    state.tracers = [];
   }
 
   function initLobbyShowcase() {
@@ -57,25 +85,47 @@
 
   function createCharacterMesh(team, weaponId, skinId) {
     const group = new THREE.Group();
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.95, 0.38), new THREE.MeshStandardMaterial({ color: team === 'attackers' ? 0xe11d48 : 0x0284c7 }));
-    torso.position.y = 1.05; torso.name = 'body'; group.add(torso);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 14), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
-    head.position.y = 1.75; head.name = 'head'; group.add(head);
+    const torso = new THREE.Mesh(
+      new THREE.BoxGeometry(0.65, 0.95, 0.38),
+      new THREE.MeshStandardMaterial({ color: team === 'attackers' ? 0xe11d48 : 0x0284c7 })
+    );
+    torso.position.y = 1.05;
+    torso.name = 'body';
+    group.add(torso);
+
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.24, 14, 14),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b })
+    );
+    head.position.y = 1.75;
+    head.name = 'head';
+    group.add(head);
+
     const wMesh = window.OZ_WEAPONS.buildWeaponMesh(weaponId || 'vandal_x', skinId || 'default');
-    wMesh.position.set(0.32, 1.25, -0.35); group.add(wMesh);
+    wMesh.position.set(0.32, 1.25, -0.35);
+    group.add(wMesh);
+
     return { group, head };
   }
 
   function startMatch(payload, isOffline = false) {
-    state.inGame = true; state.isOfflineBots = isOffline; state.matchKills = 0; state.matchDeaths = 0;
-    state.alive = true; state.hp = 100; state.armor = 50; state.spikePlanted = false;
+    state.inGame = true;
+    state.isOfflineBots = isOffline;
+    state.matchKills = 0;
+    state.matchDeaths = 0;
+    state.alive = true;
+    state.hp = 100;
+    state.armor = 50;
+    state.spikePlanted = false;
+
     document.getElementById('main-menu').classList.add('hidden');
     document.getElementById('game-hud').classList.remove('hidden');
     document.getElementById('pause-menu').classList.add('hidden');
 
     clearScene();
     const mapBuilt = window.OZ_MAPS.buildMapScene(scene, payload.map || 'neon_district', qPreset);
-    state.mapData = mapBuilt.config; state.colliders = mapBuilt.colliders;
+    state.mapData = mapBuilt.config;
+    state.colliders = mapBuilt.colliders;
 
     const inv = window.OZ_INVENTORY.getState();
     [inv.loadout.primary, inv.loadout.secondary, inv.loadout.melee].forEach((wId, i) => {
@@ -96,7 +146,9 @@
       if (me) state.pos.set(me.x, me.y, me.z);
       document.getElementById('hud-room-code').textContent = `ODA: ${payload.roomCode}`;
       document.getElementById('pause-room-code').textContent = payload.roomCode;
-      Object.values(payload.players).forEach(p => { if (p.id !== payload.playerId) addOrUpdateRemotePlayer(p); });
+      Object.values(payload.players).forEach((p) => {
+        if (p.id !== payload.playerId) addOrUpdateRemotePlayer(p);
+      });
     }
 
     applyCrosshairUI();
@@ -124,7 +176,9 @@
     rp.data = { ...rp.data, ...p };
     const isAlive = p.alive !== false;
     rp.mesh.visible = isAlive;
-    rp.mesh.children.forEach(c => { c.userData.playerId = p.id; });
+    rp.mesh.children.forEach((c) => {
+      c.userData.playerId = p.id;
+    });
     const baseY = (Number.isFinite(Number(p.y)) ? Number(p.y) : 2) - 2;
     rp.mesh.position.set(Number(p.x) || 0, Math.max(0, baseY), Number(p.z) || 0);
     rp.mesh.rotation.y = Number(p.rotY) || 0;
@@ -149,7 +203,10 @@
     const wDef = window.OZ_WEAPONS.WEAPONS[wSlot.id] || window.OZ_WEAPONS.WEAPONS.vandal_x;
     const now = performance.now();
     if (now - state.lastShotTime < wDef.fireRate) return;
-    if (!wDef.isMelee && wSlot.mag <= 0) { startReload(); return; }
+    if (!wDef.isMelee && wSlot.mag <= 0) {
+      startReload();
+      return;
+    }
 
     state.lastShotTime = now;
     if (!wDef.isMelee) wSlot.mag--;
@@ -158,7 +215,12 @@
     if (state.weaponMesh) {
       state.weaponMesh.position.z += 0.06;
       const mf = state.weaponMesh.getObjectByName('muzzleFlash');
-      if (mf) { mf.material.opacity = 0.95; setTimeout(() => { mf.material.opacity = 0; }, 45); }
+      if (mf) {
+        mf.material.opacity = 0.95;
+        setTimeout(() => {
+          mf.material.opacity = 0;
+        }, 45);
+      }
     }
 
     state.pitch += wDef.recoilY * (state.ads ? 0.65 : 1.0);
@@ -168,11 +230,11 @@
     raycaster.far = wDef.range;
     raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
 
-    const wallMeshes = state.colliders.map(c => c.mesh);
+    const wallMeshes = state.colliders.map((c) => c.mesh);
     const targetMeshes = [];
-    Object.values(state.remotePlayers).forEach(rp => {
+    Object.values(state.remotePlayers).forEach((rp) => {
       if (rp.data.alive !== false) {
-        rp.mesh.traverse(c => {
+        rp.mesh.traverse((c) => {
           if (c.isMesh) {
             c.userData.playerId = rp.data.id;
             targetMeshes.push(c);
@@ -180,9 +242,9 @@
         });
       }
     });
-    state.bots.forEach(b => {
+    state.bots.forEach((b) => {
       if (b.alive) {
-        b.mesh.traverse(c => {
+        b.mesh.traverse((c) => {
           if (c.isMesh) {
             c.userData.botId = b.id;
             targetMeshes.push(c);
@@ -199,16 +261,24 @@
     if (hits.length > 0) {
       hitPoint = hits[0].point;
       isHeadshot = hits[0].object.name === 'head';
-      if (hits[0].object.userData.playerId) { hitTargetId = hits[0].object.userData.playerId; showHitmarker(isHeadshot); }
-      else if (hits[0].object.userData.botId) {
-        const bot = state.bots.find(b => b.id === hits[0].object.userData.botId);
+      if (hits[0].object.userData.playerId) {
+        hitTargetId = hits[0].object.userData.playerId;
+        showHitmarker(isHeadshot);
+      } else if (hits[0].object.userData.botId) {
+        const bot = state.bots.find((b) => b.id === hits[0].object.userData.botId);
         if (bot && bot.alive) {
           bot.hp -= wDef.damage * (isHeadshot ? wDef.headMult : 1);
           showHitmarker(isHeadshot);
           if (bot.hp <= 0) {
-            bot.alive = false; bot.mesh.visible = false; state.matchKills++;
+            bot.alive = false;
+            bot.mesh.visible = false;
+            state.matchKills++;
             addKillFeed(window.OZ_INVENTORY.getState().playerName, bot.name, wDef.name, isHeadshot);
-            setTimeout(() => { bot.hp = 100; bot.alive = true; bot.mesh.visible = true; }, 3000);
+            setTimeout(() => {
+              bot.hp = 100;
+              bot.alive = true;
+              bot.mesh.visible = true;
+            }, 3000);
           }
         }
       }
@@ -221,7 +291,8 @@
         weapon: wSlot.id,
         origin: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
         hitPoint: { x: hitPoint.x, y: hitPoint.y, z: hitPoint.z },
-        targetId: hitTargetId, headshot: isHeadshot
+        targetId: hitTargetId,
+        headshot: isHeadshot
       });
     }
     updateHUD();
@@ -244,7 +315,9 @@
     document.getElementById('hud-ammo-mag').textContent = 'RLD';
     setTimeout(() => {
       const take = Math.min(wDef.magSize - wSlot.mag, wSlot.reserve);
-      wSlot.mag += take; wSlot.reserve -= take; state.reloading = false;
+      wSlot.mag += take;
+      wSlot.reserve -= take;
+      state.reloading = false;
       updateHUD();
     }, wDef.reloadTime);
   }
@@ -269,7 +342,9 @@
   function checkCollision(nx, ny, nz) {
     const r = 0.42;
     for (const c of state.colliders) {
-      if (nx + r > c.minX && nx - r < c.maxX && nz + r > c.minZ && nz - r < c.maxZ && ny - 1.8 < c.maxY && ny + 0.2 > c.minY) return true;
+      if (nx + r > c.minX && nx - r < c.maxX && nz + r > c.minZ && nz - r < c.maxZ && ny - 1.8 < c.maxY && ny + 0.2 > c.minY) {
+        return true;
+      }
     }
     return false;
   }
@@ -299,12 +374,19 @@
     if (!checkCollision(nx, state.pos.y, state.pos.z)) state.pos.x = nx;
     if (!checkCollision(state.pos.x, state.pos.y, nz)) state.pos.z = nz;
 
-    if (state.keys['Space'] && state.grounded) { state.vel.y = 7.6; state.grounded = false; }
+    if (state.keys['Space'] && state.grounded) {
+      state.vel.y = 7.6;
+      state.grounded = false;
+    }
     state.vel.y -= 20.0 * dt;
     state.pos.y += state.vel.y * dt;
 
     const eyeH = state.crouching ? 1.25 : 2.0;
-    if (state.pos.y <= eyeH) { state.pos.y = eyeH; state.vel.y = 0; state.grounded = true; }
+    if (state.pos.y <= eyeH) {
+      state.pos.y = eyeH;
+      state.vel.y = 0;
+      state.grounded = true;
+    }
 
     camera.position.copy(state.pos);
     camera.quaternion.setFromEuler(new THREE.Euler(state.pitch, state.yaw, 0, 'YXZ'));
@@ -327,7 +409,16 @@
     if (!state.isOfflineBots && now - state.lastNetSync > 33) {
       state.lastNetSync = now;
       const wId = wDef.id;
-      window.OZ_NET.sendMove({ x: state.pos.x, y: state.pos.y, z: state.pos.z, rotY: state.yaw, rotX: state.pitch, crouching: state.crouching, weapon: wId, skin: window.OZ_INVENTORY.getState().equippedSkins[wId] });
+      window.OZ_NET.sendMove({
+        x: state.pos.x,
+        y: state.pos.y,
+        z: state.pos.z,
+        rotY: state.yaw,
+        rotX: state.pitch,
+        crouching: state.crouching,
+        weapon: wId,
+        skin: window.OZ_INVENTORY.getState().equippedSkins[wId]
+      });
     }
   }
 
@@ -335,9 +426,18 @@
     const ctx = document.getElementById('minimap-canvas').getContext('2d');
     ctx.clearRect(0, 0, 160, 160);
     ctx.fillStyle = 'rgba(255,255,255,0.22)';
-    state.colliders.forEach(c => ctx.fillRect(80 + (c.minX - state.pos.x) * 1.6, 80 + (c.minZ - state.pos.z) * 1.6, (c.maxX - c.minX) * 1.6, (c.maxZ - c.minZ) * 1.6));
+    state.colliders.forEach((c) => {
+      ctx.fillRect(
+        80 + (c.minX - state.pos.x) * 1.6,
+        80 + (c.minZ - state.pos.z) * 1.6,
+        (c.maxX - c.minX) * 1.6,
+        (c.maxZ - c.minZ) * 1.6
+      );
+    });
     ctx.fillStyle = '#fbbf24';
-    ctx.beginPath(); ctx.arc(80, 80, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(80, 80, 4.5, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   function updateHUD() {
@@ -358,12 +458,14 @@
   function applyCrosshairUI() {
     const ch = window.OZ_INVENTORY.getState().crosshair;
     const lines = document.querySelectorAll('#crosshair-container .ch-line');
-    lines.forEach(l => l.style.background = ch.color);
+    lines.forEach((l) => {
+      l.style.background = ch.color;
+    });
     document.querySelector('#crosshair-container .ch-dot').style.background = ch.color;
-    lines[0].style.cssText = `background:${ch.color};width:${ch.thickness}px;height:${ch.size}px;left:${-ch.thickness/2}px;top:${-ch.gap-ch.size}px;`;
-    lines[1].style.cssText = `background:${ch.color};width:${ch.thickness}px;height:${ch.size}px;left:${-ch.thickness/2}px;top:${ch.gap}px;`;
-    lines[2].style.cssText = `background:${ch.color};height:${ch.thickness}px;width:${ch.size}px;top:${-ch.thickness/2}px;left:${-ch.gap-ch.size}px;`;
-    lines[3].style.cssText = `background:${ch.color};height:${ch.thickness}px;width:${ch.size}px;top:${-ch.thickness/2}px;left:${ch.gap}px;`;
+    lines[0].style.cssText = `background:${ch.color};width:${ch.thickness}px;height:${ch.size}px;left:${-ch.thickness / 2}px;top:${-ch.gap - ch.size}px;`;
+    lines[1].style.cssText = `background:${ch.color};width:${ch.thickness}px;height:${ch.size}px;left:${-ch.thickness / 2}px;top:${ch.gap}px;`;
+    lines[2].style.cssText = `background:${ch.color};height:${ch.thickness}px;width:${ch.size}px;top:${-ch.thickness / 2}px;left:${-ch.gap - ch.size}px;`;
+    lines[3].style.cssText = `background:${ch.color};height:${ch.thickness}px;width:${ch.size}px;top:${-ch.thickness / 2}px;left:${ch.gap}px;`;
   }
 
   let lastFrame = performance.now();
@@ -380,53 +482,111 @@
     drawMinimap();
     for (let i = state.tracers.length - 1; i >= 0; i--) {
       state.tracers[i].life -= dt;
-      if (state.tracers[i].life <= 0) { scene.remove(state.tracers[i].line); state.tracers.splice(i, 1); }
+      if (state.tracers[i].life <= 0) {
+        scene.remove(state.tracers[i].line);
+        state.tracers.splice(i, 1);
+      }
     }
-    renderer.autoClear = true; renderer.render(scene, camera);
-    renderer.autoClear = false; renderer.clearDepth(); renderer.render(weaponScene, weaponCamera);
+    renderer.autoClear = true;
+    renderer.render(scene, camera);
+    renderer.autoClear = false;
+    renderer.clearDepth();
+    renderer.render(weaponScene, weaponCamera);
   }
 
-  function requestPointerLock() { if (canvas.requestPointerLock) canvas.requestPointerLock(); }
-  canvas.addEventListener('click', () => { window.OZ_WEAPONS.ensureAudio(); if (state.inGame && document.pointerLockElement !== canvas) requestPointerLock(); });
-  document.addEventListener('mousemove', e => {
+  function requestPointerLock() {
+    if (canvas.requestPointerLock) canvas.requestPointerLock();
+  }
+
+  canvas.addEventListener('click', () => {
+    window.OZ_WEAPONS.ensureAudio();
+    if (state.inGame && document.pointerLockElement !== canvas) requestPointerLock();
+  });
+
+  document.addEventListener('mousemove', (e) => {
     if (!state.inGame || document.pointerLockElement !== canvas) return;
     const sens = window.OZ_INVENTORY.getState().settings.sensitivity * 0.0022;
     state.yaw -= e.movementX * sens;
     state.pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, state.pitch - e.movementY * sens));
   });
-  document.addEventListener('mousedown', e => { if (!state.inGame || document.pointerLockElement !== canvas) return; if (e.button === 0) { state.mouseDown = true; tryShoot(); } if (e.button === 2) state.ads = true; });
-  document.addEventListener('mouseup', e => { if (e.button === 0) state.mouseDown = false; if (e.button === 2) state.ads = false; });
-  document.addEventListener('contextmenu', e => e.preventDefault());
-  document.addEventListener('keydown', e => {
+
+  document.addEventListener('mousedown', (e) => {
+    if (!state.inGame || document.pointerLockElement !== canvas) return;
+    if (e.button === 0) {
+      state.mouseDown = true;
+      tryShoot();
+    }
+    if (e.button === 2) state.ads = true;
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (e.button === 0) state.mouseDown = false;
+    if (e.button === 2) state.ads = false;
+  });
+
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  document.addEventListener('keydown', (e) => {
     state.keys[e.code] = true;
     if (!state.inGame) return;
     if (e.code === 'Digit1') equipSlot(1);
     if (e.code === 'Digit2') equipSlot(2);
     if (e.code === 'Digit3') equipSlot(3);
     if (e.code === 'KeyR') startReload();
-    if (e.code === 'KeyE') { if (state.team === 'attackers') window.OZ_NET.sendPlantSpike(); else window.OZ_NET.sendDefuseSpike(); }
-    if (e.code === 'Tab') { e.preventDefault(); document.getElementById('scoreboard').classList.remove('hidden'); }
+    if (e.code === 'KeyE') {
+      if (state.team === 'attackers') window.OZ_NET.sendPlantSpike();
+      else window.OZ_NET.sendDefuseSpike();
+    }
+    if (e.code === 'Tab') {
+      e.preventDefault();
+      document.getElementById('scoreboard').classList.remove('hidden');
+    }
   });
-  document.addEventListener('keyup', e => { state.keys[e.code] = false; if (e.code === 'Tab') document.getElementById('scoreboard').classList.add('hidden'); });
-  document.addEventListener('pointerlockchange', () => { if (state.inGame) document.getElementById('pause-menu').classList.toggle('hidden', document.pointerLockElement === canvas); });
 
-  window.OZ_NET.on('connection_status', st => {
+  document.addEventListener('keyup', (e) => {
+    state.keys[e.code] = false;
+    if (e.code === 'Tab') document.getElementById('scoreboard').classList.add('hidden');
+  });
+
+  document.addEventListener('pointerlockchange', () => {
+    if (state.inGame) {
+      document.getElementById('pause-menu').classList.toggle('hidden', document.pointerLockElement === canvas);
+    }
+  });
+
+  window.OZ_NET.on('connection_status', (st) => {
     document.querySelector('#server-status .dot').className = 'dot ' + (st.connected ? 'online' : 'offline');
     document.getElementById('server-status-text').textContent = st.connected ? 'SUNUCU ÇEVRİMİÇİ' : 'OFFLINE / BOT HAZIR';
   });
-  window.OZ_NET.on('room_list', list => {
+
+  window.OZ_NET.on('room_list', (list) => {
     const box = document.getElementById('room-list-container');
-    box.innerHTML = (!list || !list.length) ? '<div class="empty-msg">Açık oda yok. Oda kur veya Maç Bul!</div>' : list.map(r => `<div class="room-item"><div><b>${r.name}</b> <small>(${r.map.toUpperCase()} • ${r.mode.toUpperCase()})</small></div><div><span>${r.players}/${r.maxPlayers}</span> <button class="mini-btn" onclick="joinRoomByCode('${r.code}')">KATIL</button></div></div>`).join('');
+    box.innerHTML = (!list || !list.length)
+      ? '<div class="empty-msg">Açık oda yok. Oda kur veya Maç Bul!</div>'
+      : list.map((r) => `<div class="room-item"><div><b>${r.name}</b> <small>(${r.map.toUpperCase()} • ${r.mode.toUpperCase()})</small></div><div><span>${r.players}/${r.maxPlayers}</span> <button class="mini-btn" onclick="joinRoomByCode('${r.code}')">KATIL</button></div></div>`).join('');
   });
-  window.joinRoomByCode = code => {
+
+  window.joinRoomByCode = (code) => {
     const inv = window.OZ_INVENTORY.getState();
-    window.OZ_NET.joinRoom({ code, playerName: inv.playerName, weapon: inv.loadout.primary, skin: inv.equippedSkins[inv.loadout.primary] });
+    window.OZ_NET.joinRoom({
+      code,
+      playerName: inv.playerName,
+      weapon: inv.loadout.primary,
+      skin: inv.equippedSkins[inv.loadout.primary]
+    });
   };
-  window.OZ_NET.on('joined_room', p => startMatch(p, false));
-  window.OZ_NET.on('player_joined', p => addOrUpdateRemotePlayer(p));
-  window.OZ_NET.on('player_moved', p => addOrUpdateRemotePlayer(p));
-  window.OZ_NET.on('player_left', id => { if (state.remotePlayers[id]) { scene.remove(state.remotePlayers[id].mesh); delete state.remotePlayers[id]; } });
-  window.OZ_NET.on('player_damaged', d => {
+
+  window.OZ_NET.on('joined_room', (p) => startMatch(p, false));
+  window.OZ_NET.on('player_joined', (p) => addOrUpdateRemotePlayer(p));
+  window.OZ_NET.on('player_moved', (p) => addOrUpdateRemotePlayer(p));
+  window.OZ_NET.on('player_left', (id) => {
+    if (state.remotePlayers[id]) {
+      scene.remove(state.remotePlayers[id].mesh);
+      delete state.remotePlayers[id];
+    }
+  });
+
+  window.OZ_NET.on('player_damaged', (d) => {
     const myId = window.OZ_NET.getPlayerId();
     if (d.targetId === myId) {
       state.hp = d.hp;
@@ -434,7 +594,8 @@
       updateHUD();
     }
   });
-  window.OZ_NET.on('player_killed', d => {
+
+  window.OZ_NET.on('player_killed', (d) => {
     addKillFeed(d.killerName, d.victimName, d.weapon.toUpperCase(), d.headshot);
     document.getElementById('hud-score-atk').textContent = d.scores.attackers;
     document.getElementById('hud-score-def').textContent = d.scores.defenders;
@@ -451,7 +612,8 @@
       state.remotePlayers[d.victimId].mesh.visible = false;
     }
   });
-  window.OZ_NET.on('player_respawned', d => {
+
+  window.OZ_NET.on('player_respawned', (d) => {
     const myId = window.OZ_NET.getPlayerId();
     if (d.id === myId) {
       state.alive = true;
@@ -460,4 +622,164 @@
       state.vel.set(0, 0, 0);
       state.pos.set(d.x, Math.max(2, d.y), d.z);
       updateHUD();
-    } else if (state.remotePlayers
+    } else if (state.remotePlayers[d.id]) {
+      const rp = state.remotePlayers[d.id];
+      rp.data.alive = true;
+      rp.mesh.visible = true;
+      rp.mesh.position.set(d.x, Math.max(0, (d.y || 2) - 2), d.z);
+    }
+  });
+
+  window.OZ_NET.on('round_start', (p) => {
+    state.alive = true;
+    state.hp = 100;
+    state.armor = 50;
+    state.vel.set(0, 0, 0);
+    const myId = window.OZ_NET.getPlayerId();
+    if (p.players && p.players[myId]) {
+      state.pos.set(p.players[myId].x, Math.max(2, p.players[myId].y), p.players[myId].z);
+    }
+    Object.values(p.players || {}).forEach((pl) => {
+      if (pl.id !== myId) addOrUpdateRemotePlayer(pl);
+    });
+    updateHUD();
+  });
+
+  function renderUI() {
+    const inv = window.OZ_INVENTORY.getState();
+    document.getElementById('ui-credits').textContent = inv.credits;
+    document.getElementById('ui-level').textContent = inv.level;
+    document.getElementById('player-name-input').value = inv.playerName;
+    document.getElementById('stat-kills').textContent = inv.kills;
+    document.getElementById('stat-deaths').textContent = inv.deaths;
+    document.getElementById('stat-wins').textContent = inv.wins;
+
+    document.getElementById('weapon-grid').innerHTML = Object.values(window.OZ_WEAPONS.WEAPONS)
+      .map((w) => `<div class="item-card ${Object.values(inv.loadout).includes(w.id) ? 'equipped' : ''}" data-wid="${w.id}"><div class="rarity">${w.category}</div><b>${w.name}</b></div>`)
+      .join('');
+
+    document.querySelectorAll('#weapon-grid .item-card').forEach((c) => {
+      c.onclick = () => {
+        state.selectedWeaponForSkin = c.dataset.wid;
+        window.OZ_INVENTORY.setLoadoutWeapon(c.dataset.wid);
+        document.getElementById('selected-weapon-title').textContent = window.OZ_WEAPONS.WEAPONS[c.dataset.wid].name;
+        updateLobbyWeaponModel();
+        renderUI();
+      };
+    });
+
+    const curW = state.selectedWeaponForSkin;
+    const owned = Array.isArray(inv.ownedSkins) && inv.ownedSkins.length ? inv.ownedSkins : ['default'];
+    document.getElementById('skin-grid').innerHTML = owned
+      .map((sId) => {
+        const sk = window.OZ_WEAPONS.SKINS[sId] || { id: sId, name: String(sId).toUpperCase(), rarity: 'COMMON' };
+        const eq = inv.equippedSkins && inv.equippedSkins[curW] === sId;
+        return `<div class="item-card ${eq ? 'equipped' : ''}" data-sid="${sId}"><div class="rarity">${sk.rarity}</div><b>${sk.name}</b><div>${eq ? 'KUŞANILDI' : 'KUŞAN'}</div></div>`;
+      })
+      .join('');
+
+    document.querySelectorAll('#skin-grid .item-card').forEach((c) => {
+      c.onclick = () => {
+        window.OZ_INVENTORY.equipSkin(curW, c.dataset.sid);
+        updateLobbyWeaponModel();
+        renderUI();
+      };
+    });
+
+    document.getElementById('store-grid').innerHTML = Object.values(window.OZ_WEAPONS.SKINS)
+      .filter((s) => s.price > 0)
+      .map((sk) => `<div class="item-card" data-buy="${sk.id}"><div class="rarity">${sk.rarity}</div><b>${sk.name}</b><div>${owned.includes(sk.id) ? 'ENVANTERDE' : '◈ ' + sk.price}</div></div>`)
+      .join('');
+
+    document.querySelectorAll('#store-grid .item-card').forEach((c) => {
+      c.onclick = () => {
+        alert(window.OZ_INVENTORY.buySkin(c.dataset.buy).msg);
+        renderUI();
+      };
+    });
+  }
+
+  document.querySelectorAll('.nav-btn').forEach((b) => {
+    b.onclick = () => {
+      document.querySelectorAll('.nav-btn').forEach((x) => x.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+      b.classList.add('active');
+      document.getElementById('tab-' + b.dataset.tab).classList.add('active');
+    };
+  });
+
+  document.querySelectorAll('.mode-card').forEach((c) => {
+    c.onclick = () => {
+      document.querySelectorAll('.mode-card').forEach((x) => x.classList.remove('selected'));
+      c.classList.add('selected');
+      state.selectedMode = c.dataset.mode;
+    };
+  });
+
+  document.getElementById('player-name-input').onchange = (e) => window.OZ_INVENTORY.setPlayerName(e.target.value);
+
+  document.getElementById('btn-quick-match').onclick = () => {
+    const inv = window.OZ_INVENTORY.getState();
+    if (!window.OZ_NET.isConnected()) return startMatch({ map: 'neon_district', mode: state.selectedMode }, true);
+    window.OZ_NET.quickMatch({
+      mode: state.selectedMode,
+      playerName: inv.playerName,
+      weapon: inv.loadout.primary,
+      skin: inv.equippedSkins[inv.loadout.primary]
+    });
+  };
+
+  document.getElementById('btn-offline-bots').onclick = () => startMatch({ map: 'neon_district', mode: state.selectedMode }, true);
+
+  document.getElementById('btn-join-code').onclick = () => {
+    const code = document.getElementById('join-code-input').value;
+    if (code) window.joinRoomByCode(code);
+  };
+
+  document.getElementById('btn-create-room').onclick = () => {
+    const inv = window.OZ_INVENTORY.getState();
+    const map = document.getElementById('custom-map').value;
+    const mode = document.getElementById('custom-mode').value;
+    if (!window.OZ_NET.isConnected()) return startMatch({ map, mode }, true);
+    window.OZ_NET.createRoom({
+      roomName: document.getElementById('custom-room-name').value,
+      mode,
+      map,
+      team: document.getElementById('custom-team').value,
+      maxPlayers: document.getElementById('custom-max-players').value,
+      isPrivate: document.getElementById('custom-private').checked,
+      playerName: inv.playerName,
+      weapon: inv.loadout.primary,
+      skin: inv.equippedSkins[inv.loadout.primary]
+    });
+  };
+
+  document.getElementById('btn-refresh-rooms').onclick = () => window.OZ_NET.refreshRooms();
+  document.getElementById('btn-free-credits').onclick = () => {
+    window.OZ_INVENTORY.addCredits(1000);
+    renderUI();
+  };
+  document.getElementById('btn-resume').onclick = () => requestPointerLock();
+  document.getElementById('btn-leave-match').onclick = () => {
+    window.OZ_INVENTORY.recordMatchStats(state.matchKills, state.matchDeaths, false);
+    state.inGame = false;
+    window.OZ_NET.leaveRoom();
+    document.getElementById('game-hud').classList.add('hidden');
+    document.getElementById('main-menu').classList.remove('hidden');
+    initLobbyShowcase();
+    renderUI();
+  };
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    weaponCamera.aspect = window.innerWidth / window.innerHeight;
+    weaponCamera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  initLobbyShowcase();
+  renderUI();
+  window.OZ_NET.connect();
+  requestAnimationFrame(animate);
+})();
