@@ -348,13 +348,13 @@ io.on('connection', (socket) => {
     const p = room.players[socket.id];
     if (!p || !p.alive) return;
 
-    const dx = data.x - p.x;
-    const dz = data.z - p.z;
-    const dist = Math.hypot(dx, dz);
-    if (dist < 18) {
-      p.x = Math.max(-46, Math.min(46, Number(data.x) || 0));
-      p.y = Math.max(0.5, Math.min(15, Number(data.y) || 2));
-      p.z = Math.max(-46, Math.min(46, Number(data.z) || 0));
+    const nx = Number(data.x);
+    const ny = Number(data.y);
+    const nz = Number(data.z);
+    if (Number.isFinite(nx) && Number.isFinite(ny) && Number.isFinite(nz)) {
+      p.x = Math.max(-48, Math.min(48, nx));
+      p.y = Math.max(0.5, Math.min(20, ny));
+      p.z = Math.max(-48, Math.min(48, nz));
     }
     p.rotY = Number(data.rotY) || 0;
     p.rotX = Number(data.rotX) || 0;
@@ -398,7 +398,7 @@ io.on('connection', (socket) => {
       if (room.mode !== 'deathmatch' && target.team === shooter.team) return;
 
       const dist = Math.hypot(shooter.x - target.x, shooter.y - target.y, shooter.z - target.z);
-      if (dist > wStats.range + 5) return;
+      if (dist > wStats.range + 15) return;
 
       const isHeadshot = !!data.headshot;
       let rawDmg = wStats.damage * (isHeadshot ? wStats.headMult : 1.0);
@@ -407,9 +407,9 @@ io.on('connection', (socket) => {
         rawDmg = wStats.damage * hits * (isHeadshot ? 1.5 : 1.0);
       }
 
-      let finalDmg = Math.round(rawDmg);
+      let finalDmg = Math.max(15, Math.round(rawDmg));
       if (target.armor > 0) {
-        const absorbed = Math.min(target.armor, Math.round(finalDmg * 0.45));
+        const absorbed = Math.min(target.armor, Math.round(finalDmg * 0.35));
         target.armor -= absorbed;
         finalDmg -= absorbed;
       }
@@ -460,9 +460,9 @@ io.on('connection', (socket) => {
             scores: room.scores,
             players: room.players
           });
-        } else if (room.mode !== 'competitive') {
+        } else {
           setTimeout(() => {
-            if (!rooms[room.code] || !room.players[target.id] || room.state !== 'playing') return;
+            if (!rooms[room.code] || !room.players[target.id]) return;
             target.hp = 100;
             target.armor = 50;
             target.alive = true;
