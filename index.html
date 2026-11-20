@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPERATION ZERO</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="main-menu">
+    <div class="top-bar">
+      <div class="brand">OPERATION ZERO</div>
+      <div class="player-info">
+        <input id="player-name-input" type="text" maxlength="18" placeholder="Oyuncu Adı" />
+        <span>LVL <b id="ui-level">1</b></span>
+        <span>◈ <b id="ui-credits">0</b></span>
+        <button id="btn-free-credits" type="button">+1000</button>
+      </div>
+      <div id="server-status">
+        <span class="dot offline"></span>
+        <span id="server-status-text">BAĞLANIYOR...</span>
+      </div>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-btn active" data-tab="play" type="button">PLAY</button>
+      <button class="nav-btn" data-tab="custom" type="button">CUSTOM MATCH</button>
+      <button class="nav-btn" data-tab="arsenal" type="button">ARSENAL</button>
+      <button class="nav-btn" data-tab="store" type="button">STORE</button>
+      <button class="nav-btn" data-tab="stats" type="button">STATS</button>
+    </div>
+
+    <div id="tab-play" class="tab-panel active">
+      <div class="modes">
+        <div class="mode-card selected" data-mode="competitive">COMPETITIVE</div>
+        <div class="mode-card" data-mode="tdm">TDM</div>
+        <div class="mode-card" data-mode="deathmatch">DEATHMATCH</div>
+      </div>
+      <div class="actions">
+        <button id="btn-quick-match" type="button">MAÇ BUL</button>
+        <button id="btn-offline-bots" type="button">OFFLINE BOTS</button>
+      </div>
+      <div class="join-box">
+        <input id="join-code-input" type="text" maxlength="6" placeholder="ODA KODU" />
+        <button id="btn-join-code" type="button">KATIL</button>
+        <button id="btn-refresh-rooms" type="button">ODALARI YENİLE</button>
+      </div>
+      <div id="room-list-container"></div>
+    </div>
+
+    <div id="tab-custom" class="tab-panel">
+      <input id="custom-room-name" type="text" maxlength="28" placeholder="Oda Adı" />
+      <select id="custom-map">
+        <option value="neon_district">NEON DISTRICT</option>
+        <option value="dust_sector">DUST SECTOR</option>
+        <option value="arctic_base">ARCTIC BASE</option>
+        <option value="tokyo_underground">TOKYO UNDERGROUND</option>
+        <option value="ancient_ruins">ANCIENT RUINS</option>
+        <option value="cyber_factory">CYBER FACTORY</option>
+      </select>
+      <select id="custom-mode">
+        <option value="competitive">COMPETITIVE</option>
+        <option value="tdm">TDM</option>
+        <option value="deathmatch">DEATHMATCH</option>
+      </select>
+      <select id="custom-team">
+        <option value="attackers">ATTACKERS</option>
+        <option value="defenders">DEFENDERS</option>
+      </select>
+      <input id="custom-max-players" type="number" min="2" max="10" value="10" />
+      <label><input id="custom-private" type="checkbox" /> Özel Oda</label>
+      <button id="btn-create-room" type="button">ODAYI BAŞLAT VE GİR</button>
+    </div>
+
+    <div id="tab-arsenal" class="tab-panel">
+      <h3 id="selected-weapon-title">VANDAL-X</h3>
+      <div id="weapon-grid"></div>
+      <div id="skin-grid"></div>
+    </div>
+
+    <div id="tab-store" class="tab-panel">
+      <div id="store-grid"></div>
+    </div>
+
+    <div id="tab-stats" class="tab-panel">
+      <div>Kills: <b id="stat-kills">0</b></div>
+      <div>Deaths: <b id="stat-deaths">0</b></div>
+      <div>Wins: <b id="stat-wins">0</b></div>
+    </div>
+  </div>
+
+  <div id="game-hud" class="hidden">
+    <div id="hud-room-code">ODA: ------</div>
+    <div class="score-bar">
+      <span id="hud-score-atk">0</span> - <span id="hud-score-def">0</span>
+    </div>
+    <canvas id="minimap-canvas" width="160" height="160"></canvas>
+    <div id="kill-feed"></div>
+    <div id="crosshair-container">
+      <div class="ch-line"></div>
+      <div class="ch-line"></div>
+      <div class="ch-line"></div>
+      <div class="ch-line"></div>
+      <div class="ch-dot"></div>
+    </div>
+    <div id="hitmarker" class="hidden">✕</div>
+    <div id="sniper-scope" class="hidden"></div>
+    <div class="vitals">
+      <span>HP: <b id="hud-hp">100</b></span>
+      <span>ARMOR: <b id="hud-armor">50</b></span>
+    </div>
+    <div class="weapon-hud">
+      <div id="hud-weapon-name">VANDAL-X</div>
+      <div id="hud-skin-name">STANDARD CARBON</div>
+      <div><b id="hud-ammo-mag">25</b> / <span id="hud-ammo-res">75</span></div>
+    </div>
+    <div id="scoreboard" class="hidden">TAB SCOREBOARD</div>
+  </div>
+
+  <div id="pause-menu" class="hidden">
+    <div>ODA: <b id="pause-room-code">------</b></div>
+    <button id="btn-resume" type="button">DEVAM ET</button>
+    <button id="btn-leave-match" type="button">AYRIL</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="./config.js"></script>
+  <script src="./inventory.js"></script>
+  <script src="./maps.js"></script>
+  <script src="./weapons.js"></script>
+  <script src="./multiplayer.js"></script>
+  <script src="./game.js"></script>
+</body>
+</html>
