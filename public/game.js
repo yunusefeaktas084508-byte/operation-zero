@@ -47,7 +47,7 @@
     if (state.lobbyShowcaseMesh) scene.remove(state.lobbyShowcaseMesh);
     const inv = window.OZ_INVENTORY.getState();
     const wId = state.selectedWeaponForSkin || inv.loadout.primary;
-    const sId = inv.equippedSkins[wId] || 'default';
+    const sId = (inv.equippedSkins && inv.equippedSkins[wId]) || 'default';
     const mesh = window.OZ_WEAPONS.buildWeaponMesh(wId, sId);
     mesh.scale.set(2.1, 2.1, 2.1);
     mesh.position.set(0.65, -0.05, -1.8);
@@ -79,8 +79,8 @@
 
     const inv = window.OZ_INVENTORY.getState();
     [inv.loadout.primary, inv.loadout.secondary, inv.loadout.melee].forEach((wId, i) => {
-      const wDef = window.OZ_WEAPONS.WEAPONS[wId];
-      state.weaponsState[i + 1] = { id: wId, mag: wDef.magSize, reserve: wDef.reserveAmmo };
+      const wDef = window.OZ_WEAPONS.WEAPONS[wId] || window.OZ_WEAPONS.WEAPONS.vandal_x;
+      state.weaponsState[i + 1] = { id: wDef.id, mag: wDef.magSize, reserve: wDef.reserveAmmo };
     });
     equipSlot(1);
 
@@ -146,7 +146,7 @@
   function tryShoot() {
     if (!state.inGame || !state.alive || state.reloading) return;
     const wSlot = state.weaponsState[state.currentSlot];
-    const wDef = window.OZ_WEAPONS.WEAPONS[wSlot.id];
+    const wDef = window.OZ_WEAPONS.WEAPONS[wSlot.id] || window.OZ_WEAPONS.WEAPONS.vandal_x;
     const now = performance.now();
     if (now - state.lastShotTime < wDef.fireRate) return;
     if (!wDef.isMelee && wSlot.mag <= 0) { startReload(); return; }
@@ -238,7 +238,7 @@
 
   function startReload() {
     const wSlot = state.weaponsState[state.currentSlot];
-    const wDef = window.OZ_WEAPONS.WEAPONS[wSlot.id];
+    const wDef = window.OZ_WEAPONS.WEAPONS[wSlot.id] || window.OZ_WEAPONS.WEAPONS.vandal_x;
     if (state.reloading || wDef.isMelee || wSlot.mag >= wDef.magSize || wSlot.reserve <= 0) return;
     state.reloading = true;
     document.getElementById('hud-ammo-mag').textContent = 'RLD';
@@ -309,7 +309,8 @@
     camera.position.copy(state.pos);
     camera.quaternion.setFromEuler(new THREE.Euler(state.pitch, state.yaw, 0, 'YXZ'));
 
-    const wDef = window.OZ_WEAPONS.WEAPONS[state.weaponsState[state.currentSlot].id];
+    const wSlot = state.weaponsState[state.currentSlot];
+    const wDef = (wSlot && window.OZ_WEAPONS.WEAPONS[wSlot.id]) || window.OZ_WEAPONS.WEAPONS.vandal_x;
     const targetFov = state.ads ? wDef.adsFov : window.OZ_INVENTORY.getState().settings.fov;
     camera.fov += (targetFov - camera.fov) * 14 * dt;
     camera.updateProjectionMatrix();
@@ -325,7 +326,7 @@
     const now = performance.now();
     if (!state.isOfflineBots && now - state.lastNetSync > 33) {
       state.lastNetSync = now;
-      const wId = state.weaponsState[state.currentSlot].id;
+      const wId = wDef.id;
       window.OZ_NET.sendMove({ x: state.pos.x, y: state.pos.y, z: state.pos.z, rotY: state.yaw, rotX: state.pitch, crouching: state.crouching, weapon: wId, skin: window.OZ_INVENTORY.getState().equippedSkins[wId] });
     }
   }
@@ -344,10 +345,11 @@
     document.getElementById('hud-armor').textContent = state.armor;
     const wSlot = state.weaponsState[state.currentSlot];
     if (wSlot) {
-      const wDef = window.OZ_WEAPONS.WEAPONS[wSlot.id];
-      const skinId = window.OZ_INVENTORY.getState().equippedSkins[wSlot.id] || 'default';
+      const wDef = window.OZ_WEAPONS.WEAPONS[wSlot.id] || window.OZ_WEAPONS.WEAPONS.vandal_x;
+      const skinId = window.OZ_INVENTORY.getState().equippedSkins[wDef.id] || 'default';
+      const sk = window.OZ_WEAPONS.SKINS[skinId] || { name: skinId };
       document.getElementById('hud-weapon-name').textContent = wDef.name;
-      document.getElementById('hud-skin-name').textContent = window.OZ_WEAPONS.SKINS[skinId].name;
+      document.getElementById('hud-skin-name').textContent = sk.name;
       document.getElementById('hud-ammo-mag').textContent = wDef.isMelee ? '∞' : wSlot.mag;
       document.getElementById('hud-ammo-res').textContent = wDef.isMelee ? '∞' : wSlot.reserve;
     }
@@ -458,102 +460,4 @@
       state.vel.set(0, 0, 0);
       state.pos.set(d.x, Math.max(2, d.y), d.z);
       updateHUD();
-    } else if (state.remotePlayers[d.id]) {
-      const rp = state.remotePlayers[d.id];
-      rp.data.alive = true;
-      rp.mesh.visible = true;
-      rp.mesh.position.set(d.x, Math.max(0, (d.y || 2) - 2), d.z);
-    }
-  });
-  window.OZ_NET.on('round_start', p => {
-    state.alive = true;
-    state.hp = 100;
-    state.armor = 50;
-    state.vel.set(0, 0, 0);
-    const myId = window.OZ_NET.getPlayerId();
-    if (p.players && p.players[myId]) {
-      state.pos.set(p.players[myId].x, Math.max(2, p.players[myId].y), p.players[myId].z);
-    }
-    Object.values(p.players || {}).forEach(pl => {
-      if (pl.id !== myId) addOrUpdateRemotePlayer(pl);
-    });
-    updateHUD();
-  });
-
-  function renderUI() {
-    const inv = window.OZ_INVENTORY.getState();
-    document.getElementById('ui-credits').textContent = inv.credits;
-    document.getElementById('ui-level').textContent = inv.level;
-    document.getElementById('player-name-input').value = inv.playerName;
-    document.getElementById('stat-kills').textContent = inv.kills;
-    document.getElementById('stat-deaths').textContent = inv.deaths;
-    document.getElementById('stat-wins').textContent = inv.wins;
-
-    document.getElementById('weapon-grid').innerHTML = Object.values(window.OZ_WEAPONS.WEAPONS).map(w => `<div class="item-card ${Object.values(inv.loadout).includes(w.id) ? 'equipped' : ''}" data-wid="${w.id}"><div class="rarity">${w.category}</div><b>${w.name}</b></div>`).join('');
-    document.querySelectorAll('#weapon-grid .item-card').forEach(c => c.onclick = () => {
-      state.selectedWeaponForSkin = c.dataset.wid;
-      window.OZ_INVENTORY.setLoadoutWeapon(c.dataset.wid);
-      document.getElementById('selected-weapon-title').textContent = window.OZ_WEAPONS.WEAPONS[c.dataset.wid].name;
-      updateLobbyWeaponModel(); renderUI();
-    });
-
-    const curW = state.selectedWeaponForSkin;
-    document.getElementById('skin-grid').innerHTML = inv.ownedSkins.map(sId => {
-      const sk = window.OZ_WEAPONS.SKINS[sId];
-      const eq = inv.equippedSkins[curW] === sId;
-      return `<div class="item-card ${eq ? 'equipped' : ''}" data-sid="${sId}"><div class="rarity">${sk.rarity}</div><b>${sk.name}</b><div>${eq ? 'KUŞANILDI' : 'KUŞAN'}</div></div>`;
-    }).join('');
-    document.querySelectorAll('#skin-grid .item-card').forEach(c => c.onclick = () => { window.OZ_INVENTORY.equipSkin(curW, c.dataset.sid); updateLobbyWeaponModel(); renderUI(); });
-
-    document.getElementById('store-grid').innerHTML = Object.values(window.OZ_WEAPONS.SKINS).filter(s => s.price > 0).map(sk => `<div class="item-card" data-buy="${sk.id}"><div class="rarity">${sk.rarity}</div><b>${sk.name}</b><div>${inv.ownedSkins.includes(sk.id) ? 'ENVANTERDE' : '◈ ' + sk.price}</div></div>`).join('');
-    document.querySelectorAll('#store-grid .item-card').forEach(c => c.onclick = () => { alert(window.OZ_INVENTORY.buySkin(c.dataset.buy).msg); renderUI(); });
-  }
-
-  document.querySelectorAll('.nav-btn').forEach(b => b.onclick = () => {
-    document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    b.classList.add('active');
-    document.getElementById('tab-' + b.dataset.tab).classList.add('active');
-  });
-  document.querySelectorAll('.mode-card').forEach(c => c.onclick = () => {
-    document.querySelectorAll('.mode-card').forEach(x => x.classList.remove('selected'));
-    c.classList.add('selected');
-    state.selectedMode = c.dataset.mode;
-  });
-  document.getElementById('player-name-input').onchange = e => window.OZ_INVENTORY.setPlayerName(e.target.value);
-  document.getElementById('btn-quick-match').onclick = () => {
-    const inv = window.OZ_INVENTORY.getState();
-    if (!window.OZ_NET.isConnected()) return startMatch({ map: 'neon_district', mode: state.selectedMode }, true);
-    window.OZ_NET.quickMatch({ mode: state.selectedMode, playerName: inv.playerName, weapon: inv.loadout.primary, skin: inv.equippedSkins[inv.loadout.primary] });
-  };
-  document.getElementById('btn-offline-bots').onclick = () => startMatch({ map: 'neon_district', mode: state.selectedMode }, true);
-  document.getElementById('btn-join-code').onclick = () => { const code = document.getElementById('join-code-input').value; if (code) window.joinRoomByCode(code); };
-  document.getElementById('btn-create-room').onclick = () => {
-    const inv = window.OZ_INVENTORY.getState();
-    const map = document.getElementById('custom-map').value;
-    const mode = document.getElementById('custom-mode').value;
-    if (!window.OZ_NET.isConnected()) return startMatch({ map, mode }, true);
-    window.OZ_NET.createRoom({ roomName: document.getElementById('custom-room-name').value, mode, map, team: document.getElementById('custom-team').value, maxPlayers: document.getElementById('custom-max-players').value, isPrivate: document.getElementById('custom-private').checked, playerName: inv.playerName, weapon: inv.loadout.primary, skin: inv.equippedSkins[inv.loadout.primary] });
-  };
-  document.getElementById('btn-refresh-rooms').onclick = () => window.OZ_NET.refreshRooms();
-  document.getElementById('btn-free-credits').onclick = () => { window.OZ_INVENTORY.addCredits(1000); renderUI(); };
-  document.getElementById('btn-resume').onclick = () => requestPointerLock();
-  document.getElementById('btn-leave-match').onclick = () => {
-    window.OZ_INVENTORY.recordMatchStats(state.matchKills, state.matchDeaths, false);
-    state.inGame = false; window.OZ_NET.leaveRoom();
-    document.getElementById('game-hud').classList.add('hidden');
-    document.getElementById('main-menu').classList.remove('hidden');
-    initLobbyShowcase(); renderUI();
-  };
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-    weaponCamera.aspect = window.innerWidth / window.innerHeight; weaponCamera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  initLobbyShowcase();
-  renderUI();
-  window.OZ_NET.connect();
-  requestAnimationFrame(animate);
-})();
+    } else if (state.remotePlayers
