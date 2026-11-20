@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>OPERATION ZERO — Competitive 3D Browser FPS</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="main-menu" class="overlay-screen">
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-tag">TACTICAL 5V5 // WEBGL</span>
+        <h1>OPERATION <span>ZERO</span></h1>
+      </div>
+      <nav class="main-nav">
+        <button class="nav-btn active" data-tab="play">PLAY</button>
+        <button class="nav-btn" data-tab="custom">CUSTOM MATCH</button>
+        <button class="nav-btn" data-tab="inventory">ARSENAL & SKINS</button>
+        <button class="nav-btn" data-tab="store">STORE</button>
+        <button class="nav-btn" data-tab="settings">SETTINGS</button>
+      </nav>
+      <div class="player-card">
+        <div class="server-pill" id="server-status">
+          <span class="dot offline"></span> <span id="server-status-text">BAĞLANIYOR...</span>
+        </div>
+        <div class="currency-pill">◈ <span id="ui-credits">12500</span></div>
+        <div class="profile-box">
+          <input type="text" id="player-name-input" maxlength="16" value="Agent_001" />
+          <span class="lvl-badge">LVL <b id="ui-level">1</b></span>
+        </div>
+      </div>
+    </header>
+
+    <main id="tab-play" class="tab-panel active">
+      <div class="play-grid">
+        <div class="mode-cards">
+          <div class="mode-card selected" data-mode="competitive">
+            <span class="badge">5V5 TAKTİKSEL</span>
+            <h2>COMPETITIVE</h2>
+            <p>Saldırı ve Savunma. Spike kur/imha et. İlk 7 raunda ulaşan kazanır.</p>
+          </div>
+          <div class="mode-card" data-mode="tdm">
+            <span class="badge">TAKIM SAVAŞI</span>
+            <h2>TEAM DEATHMATCH</h2>
+            <p>Hızlı yeniden doğma. 30 skora ilk ulaşan takım maçı kazanır.</p>
+          </div>
+          <div class="mode-card" data-mode="deathmatch">
+            <span class="badge">HERKES TEK</span>
+            <h2>DEATHMATCH</h2>
+            <p>Refleks ve aim antrenmanı. 20 öldürmeye ilk ulaşan kazanır.</p>
+          </div>
+        </div>
+
+        <div class="action-box">
+          <button id="btn-quick-match" class="cta-btn primary">MAÇ BUL (ONLINE)</button>
+          <button id="btn-offline-bots" class="cta-btn secondary">BOTLARLA ANTRENMAN (OFFLINE)</button>
+          <div class="quick-join-row">
+            <input type="text" id="join-code-input" placeholder="ODA KODU" maxlength="6" />
+            <button id="btn-join-code" class="cta-btn accent">KATIL</button>
+          </div>
+          <div class="stats-mini">
+            <div><span>KILLS</span><b id="stat-kills">0</b></div>
+            <div><span>DEATHS</span><b id="stat-deaths">0</b></div>
+            <div><span>WINS</span><b id="stat-wins">0</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="server-browser">
+        <div class="sb-header">
+          <h3>AKTİF ÇEVRİMİÇİ ODALAR</h3>
+          <button id="btn-refresh-rooms" class="mini-btn">YENİLE</button>
+        </div>
+        <div id="room-list-container" class="room-list">
+          <div class="empty-msg">Sunucudan oda listesi bekleniyor...</div>
+        </div>
+      </div>
+    </main>
+
+    <main id="tab-custom" class="tab-panel">
+      <div class="panel-box custom-box">
+        <h2>ÖZEL ODA OLUŞTUR (ARKADAŞLARLA OYNA)</h2>
+        <div class="form-grid">
+          <label>Oda Adı <input type="text" id="custom-room-name" value="Operation Zero TR" maxlength="24" /></label>
+          <label>Oyun Modu
+            <select id="custom-mode">
+              <option value="competitive">Competitive 5v5 (Spike)</option>
+              <option value="tdm">Team Deathmatch</option>
+              <option value="deathmatch">Deathmatch (FFA)</option>
+            </select>
+          </label>
+          <label>Harita Seçimi
+            <select id="custom-map">
+              <option value="neon_district">1. Neon District</option>
+              <option value="dust_sector">2. Dust Sector</option>
+              <option value="arctic_base">3. Arctic Base</option>
+              <option value="tokyo_underground">4. Tokyo Underground</option>
+              <option value="ancient_ruins">5. Ancient Ruins</option>
+              <option value="cyber_factory">6. Cyber Factory</option>
+            </select>
+          </label>
+          <label>Takım Seçimi
+            <select id="custom-team">
+              <option value="attackers">Attackers (Kırmızı)</option>
+              <option value="defenders">Defenders (Mavi)</option>
+            </select>
+          </label>
+          <label>Maksimum Oyuncu
+            <select id="custom-max-players">
+              <option value="2">1v1</option>
+              <option value="4">2v2</option>
+              <option value="6">3v3</option>
+              <option value="10" selected>5v5</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="custom-private" /> Özel Oda (Kodla Katılım)</label>
+        </div>
+        <button id="btn-create-room" class="cta-btn primary">ODAYI BAŞLAT VE GİR</button>
+      </div>
+    </main>
+
+    <main id="tab-inventory" class="tab-panel">
+      <div class="inv-layout">
+        <div class="panel-box">
+          <h3>SİLAH KOLEKSİYONU</h3>
+          <div id="weapon-grid" class="card-grid"></div>
+        </div>
+        <div class="panel-box">
+          <h3>SKİNLER (<span id="selected-weapon-title">VANDAL-X</span>)</h3>
+          <div id="skin-grid" class="card-grid"></div>
+        </div>
+      </div>
+    </main>
+
+    <main id="tab-store" class="tab-panel">
+      <div class="panel-box">
+        <div class="sb-header">
+          <h2>SKIN MAĞAZASI</h2>
+          <button id="btn-free-credits" class="mini-btn">+1000 ÜCRETSİZ KREDİ</button>
+        </div>
+        <div id="store-grid" class="card-grid"></div>
+      </div>
+    </main>
+
+    <main id="tab-settings" class="tab-panel">
+      <div class="settings-layout">
+        <div class="panel-box">
+          <h3>GRAFİK VE KONTROL AYARLARI</h3>
+          <label>Grafik Kalitesi
+            <select id="set-graphics">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High" selected>High</option>
+              <option value="Ultra">Ultra</option>
+            </select>
+          </label>
+          <label>Hassasiyet: <span id="sens-val">1.0</span>
+            <input type="range" id="set-sens" min="0.2" max="3.0" step="0.1" value="1.0" />
+          </label>
+          <label>Ses: <span id="vol-val">50%</span>
+            <input type="range" id="set-vol" min="0" max="1" step="0.05" value="0.5" />
+          </label>
+          <label>FOV: <span id="fov-val">75</span>
+            <input type="range" id="set-fov" min="60" max="100" step="1" value="75" />
+          </label>
+        </div>
+        <div class="panel-box">
+          <h3>CROSSHAIR</h3>
+          <label>Renk <input type="color" id="ch-color" value="#00f5d4" /></label>
+          <label>Boyut <input type="range" id="ch-size" min="4" max="24" value="10" /></label>
+          <label>Kalınlık <input type="range" id="ch-thick" min="1" max="6" value="2" /></label>
+          <label>Boşluk <input type="range" id="ch-gap" min="0" max="14" value="4" /></label>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="game-hud" class="hidden">
+    <div class="hud-top">
+      <div class="team-score atk">ATK <span id="hud-score-atk">0</span></div>
+      <div class="round-box">
+        <div id="hud-room-code" class="room-tag">ODA: OFFLINE</div>
+        <div id="hud-timer">01:45</div>
+        <div id="hud-round">ROUND 1</div>
+      </div>
+      <div class="team-score def"><span id="hud-score-def">0</span> DEF</div>
+    </div>
+
+    <canvas id="minimap-canvas" width="160" height="160"></canvas>
+    <div id="kill-feed"></div>
+
+    <div id="crosshair-container">
+      <div class="ch-line top"></div>
+      <div class="ch-line bottom"></div>
+      <div class="ch-line left"></div>
+      <div class="ch-line right"></div>
+      <div class="ch-dot"></div>
+    </div>
+    <div id="hitmarker" class="hidden">✕</div>
+    <div id="sniper-scope" class="hidden"><div class="scope-h"></div><div class="scope-v"></div></div>
+    <div id="action-prompt" class="hidden"></div>
+    <div id="banner-overlay" class="hidden"><h2 id="banner-title"></h2><p id="banner-sub"></p></div>
+
+    <div class="hud-bottom-left">
+      <div class="stat-bar"><span>HP</span><b id="hud-hp">100</b><div class="bar-track"><div id="hp-fill" style="width:100%"></div></div></div>
+      <div class="stat-bar"><span>ARMOR</span><b id="hud-armor">50</b><div class="bar-track"><div id="armor-fill" style="width:50%"></div></div></div>
+    </div>
+
+    <div class="hud-bottom-right">
+      <div id="hud-weapon-name">VANDAL-X</div>
+      <div id="hud-skin-name" class="skin-sub">Cyber Neon</div>
+      <div class="ammo-display"><span id="hud-ammo-mag">25</span> <small>/ <span id="hud-ammo-res">75</span></small></div>
+      <div class="slot-hints">[1] Ana [2] Tabanca [3] Bıçak [R] Reload [E] Spike</div>
+    </div>
+
+    <div id="scoreboard" class="hidden">
+      <h3>SKOR TABLOSU</h3>
+      <table><thead><tr><th>OYUNCU</th><th>TAKIM</th><th>KILLS</th><th>DEATHS</th><th>SKOR</th></tr></thead><tbody id="scoreboard-body"></tbody></table>
+    </div>
+
+    <div id="pause-menu" class="hidden">
+      <div class="pause-card">
+        <h2>DURAKLATILDI</h2>
+        <p>Oda Kodu: <b id="pause-room-code">---</b></p>
+        <button id="btn-resume" class="cta-btn primary">DEVAM ET</button>
+        <button id="btn-leave-match" class="cta-btn secondary">MENÜYE DÖN</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="weapons.js"></script>
+  <script src="maps.js"></script>
+  <script src="inventory.js"></script>
+  <script src="multiplayer.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
